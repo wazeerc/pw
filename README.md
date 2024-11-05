@@ -14,7 +14,7 @@
    ```
    cd pw && go run main.go
    ```
-   or to generate a standalone executable or `.exe`
+   or to generate a standalone `.exe`
    ```
     go build -o pw.exe main.go
    ```
