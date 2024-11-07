@@ -1,7 +1,7 @@
 package cmd
 
 import (
-	password_generator "pw/utils"
+	utils "pw/utils"
 
 	"github.com/spf13/cobra"
 )
@@ -30,8 +30,8 @@ func getPassword(cmd *cobra.Command, args []string) {
 	isDigits, _ := cmd.Flags().GetBool("numbers")
 	isSymbols, _ := cmd.Flags().GetBool("symbols")
 
-	password := password_generator.GeneratePassword(length, isDigits, isSymbols)
+	password := utils.GeneratePassword(length, isDigits, isSymbols)
 
-	cmd.Println("Your password has been generated successfully!")
-	cmd.Printf("Password: %s\n", password)
+	cmd.Println("📋 Your password has been copied to your clipboard!")
+	utils.WriteToClipboard(password)
 }
