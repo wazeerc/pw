@@ -1,6 +1,10 @@
-package password_generator
+package utils
 
-import "math/rand"
+import (
+	"math/rand"
+
+	"github.com/atotto/clipboard"
+)
 
 func GeneratePassword(length int, includeDigits bool, includeSymbols bool) string {
 	charset := "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"
@@ -17,4 +21,8 @@ func GeneratePassword(length int, includeDigits bool, includeSymbols bool) strin
 	}
 
 	return string(password)
+}
+
+func WriteToClipboard(text string) error {
+	return clipboard.WriteAll(text)
 }
