@@ -12,9 +12,18 @@
 
 2. Run the program:
    ```
-   cd pw && go run main.go
+   cd pw && go run main.go gen -l 16 -n
    ```
-   or to generate a standalone `.exe`
+   or
    ```
-    go build -o pw.exe main.go
+    go build && go install
+    pw gen -l 16 -n
    ```
+
+### **Help**
+
+To get help on how to use the program, run:
+```
+pw help
+```
+or visit the [documentation](#) for more details.
