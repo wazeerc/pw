@@ -1,7 +1,10 @@
+/*
+Copyright © 2024 wazeerc
+*/
 package main
 
-import "fmt"
+import "pw/cmd"
 
 func main() {
-    fmt.Printf("Hello, World!")
+	cmd.Execute()
 }
