@@ -20,6 +20,11 @@
     pw gen -l 16 -n
    ```
 
+3. To use the interactive mode:
+   ```
+   pw -i
+   ```
+
 ### **Help**
 
 To get help on how to use the program, run:
