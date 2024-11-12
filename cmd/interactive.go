@@ -10,22 +10,23 @@ import (
 )
 
 type model struct {
-	passwordOptions []string
-	cursor          int
-	selected        []bool
-	inputMode       bool
-	passwordLength  int
-	completed       bool
-	errorMsg        string
+	passwordOptions   []string
+	cursor            int
+	selected          []bool
+	passwordLength    int
+	completed         bool
+	errorMsg          string
+	generateButton    string
+	generatedPassword string
 }
 
 func initialModel() model {
 	return model{
 		passwordOptions: []string{"Include Digits?", "Include Symbols?"},
 		selected:        make([]bool, 2),
-		inputMode:       false,
-		passwordLength:  0,
+		passwordLength:  8,
 		errorMsg:        "",
+		generateButton:  "Generate Password",
 	}
 }
 
@@ -36,43 +37,37 @@ func (m model) Init() tea.Cmd {
 func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
-		if m.inputMode {
-			switch msg.String() {
-			case "ctrl+c":
-				return m, tea.Quit
-			case "enter":
-				if m.passwordLength > 0 {
-					if m.passwordLength < 8 {
-						m.errorMsg = "Password length must be at least 8 characters"
-						return m, nil
-					}
-					m.completed = true
-				}
-				return m, tea.Quit
-			case "backspace":
-				m.passwordLength = m.passwordLength / 10
-			default:
-				if len(msg.String()) == 1 && msg.String() >= "0" && msg.String() <= "9" {
-					digit := int(msg.String()[0] - '0')
-					m.passwordLength = m.passwordLength*10 + digit
-				}
+		switch msg.String() {
+		case "ctrl+c":
+			return m, tea.Quit
+		case "up":
+			if m.cursor > 0 {
+				m.cursor--
 			}
-		} else {
-			switch msg.String() {
-			case "ctrl+c":
-				return m, tea.Quit
-			case "up":
-				if m.cursor > 0 {
-					m.cursor--
-				}
-			case "down":
-				if m.cursor < len(m.passwordOptions)-1 {
-					m.cursor++
-				}
-			case "n":
-				m.inputMode = true
-			case "enter", " ":
+		case "down":
+			if m.cursor < len(m.passwordOptions)+1 {
+				m.cursor++
+			}
+		case "enter", " ":
+			if m.cursor < len(m.passwordOptions) {
 				m.selected[m.cursor] = !m.selected[m.cursor]
+			} else if m.cursor == len(m.passwordOptions)+1 {
+				includeDigits := m.selected[0]
+				includeSymbols := m.selected[1]
+
+				m.generatedPassword = utils.GeneratePassword(m.passwordLength, includeDigits, includeSymbols)
+				utils.WriteToClipboard(m.generatedPassword)
+
+				m.completed = true
+				return m, tea.Quit
+			}
+		case "left":
+			if m.cursor == len(m.passwordOptions) && m.passwordLength > 8 {
+				m.passwordLength--
+			}
+		case "right":
+			if m.cursor == len(m.passwordOptions) {
+				m.passwordLength++
 			}
 		}
 	}
@@ -81,28 +76,11 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 func (m model) View() string {
 	if m.completed {
-		includeDigits := m.selected[0]
-		includeSymbols := m.selected[1]
-
-		password := utils.GeneratePassword(m.passwordLength, includeDigits, includeSymbols)
-
-		fmt.Println("📋 Your password has been copied to your clipboard!")
-		utils.WriteToClipboard(password)
+		return "\n📋 Your password has been copied to your clipboard!\n\n"
 	}
 
-	if m.inputMode {
-		s := "\n🔐 Enter desired password length (minimum 8 characters):\n\n"
-		if m.passwordLength > 0 {
-			s += fmt.Sprintf("%d", m.passwordLength)
-		}
-		if m.errorMsg != "" {
-			s += "\n\n❌ " + m.errorMsg
-		}
-		s += "\n\nPress enter to confirm or ctrl+c to quit.\n"
-		return s
-	}
+	s := "\n"
 
-	s := "\n🔐 Effortlessly Generate Robust Passwords!\n\n"
 	for i, choice := range m.passwordOptions {
 		cursor := " "
 		if m.cursor == i {
@@ -114,9 +92,26 @@ func (m model) View() string {
 		}
 		s += fmt.Sprintf("%s [%s] %s\n", cursor, checked, choice)
 	}
-	s += "\nPress space or enter to select an option.\n"
-	s += "Press n to select the password length.\n"
-	s += "\n\nPress ctrl+c to quit.\n"
+
+	cursor := " "
+	if m.cursor == len(m.passwordOptions) {
+		cursor = ">"
+	}
+	s += fmt.Sprintf("%s Password Length: < %d >\n", cursor, m.passwordLength)
+
+	cursor = " "
+	if m.cursor == len(m.passwordOptions)+1 {
+		cursor = ">"
+	}
+	s += fmt.Sprintf("\n%s [ %s ]\n", cursor, m.generateButton)
+
+	if m.errorMsg != "" {
+		s += "\n❌ " + m.errorMsg + "\n"
+	}
+
+	s += "\nPress space/enter to toggle options.\n"
+	s += "Use left/right arrows to adjust password length.\n"
+	s += "\nPress ctrl+c to quit.\n"
 	return s
 }
 
