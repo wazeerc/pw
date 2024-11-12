@@ -35,3 +35,9 @@ To get help on how to use the program, run:
 ```
 pw help
 ```
+
+or
+
+```
+go run main.go help
+```
