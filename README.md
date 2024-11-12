@@ -22,6 +22,10 @@
 
 3. To use the interactive mode:
    ```
+   go run main.go -i
+   ```
+   or
+   ```
    pw -i
    ```
 
