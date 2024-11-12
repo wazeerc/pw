@@ -14,7 +14,7 @@ type model struct {
 	cursor          int
 	selected        []bool
 	inputMode       bool
-	passwordLength  string
+	passwordLength  int
 	completed       bool
 	errorMsg        string
 }
@@ -24,7 +24,7 @@ func initialModel() model {
 		passwordOptions: []string{"Include Digits?", "Include Symbols?"},
 		selected:        make([]bool, 2),
 		inputMode:       false,
-		passwordLength:  "",
+		passwordLength:  0,
 		errorMsg:        "",
 	}
 }
@@ -41,10 +41,8 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			case "ctrl+c":
 				return m, tea.Quit
 			case "enter":
-				if len(m.passwordLength) > 0 {
-					length := 0
-					fmt.Sscanf(m.passwordLength, "%d", &length)
-					if length < 8 {
+				if m.passwordLength > 0 {
+					if m.passwordLength < 8 {
 						m.errorMsg = "Password length must be at least 8 characters"
 						return m, nil
 					}
@@ -52,12 +50,11 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				}
 				return m, tea.Quit
 			case "backspace":
-				if len(m.passwordLength) > 0 {
-					m.passwordLength = m.passwordLength[:len(m.passwordLength)-1]
-				}
+				m.passwordLength = m.passwordLength / 10
 			default:
 				if len(msg.String()) == 1 && msg.String() >= "0" && msg.String() <= "9" {
-					m.passwordLength += msg.String()
+					digit := int(msg.String()[0] - '0')
+					m.passwordLength = m.passwordLength*10 + digit
 				}
 			}
 		} else {
@@ -87,9 +84,7 @@ func (m model) View() string {
 		includeDigits := m.selected[0]
 		includeSymbols := m.selected[1]
 
-		length := 0
-		fmt.Sscanf(m.passwordLength, "%d", &length)
-		password := utils.GeneratePassword(length, includeDigits, includeSymbols)
+		password := utils.GeneratePassword(m.passwordLength, includeDigits, includeSymbols)
 
 		fmt.Println("📋 Your password has been copied to your clipboard!")
 		utils.WriteToClipboard(password)
@@ -97,7 +92,9 @@ func (m model) View() string {
 
 	if m.inputMode {
 		s := "\n🔐 Enter desired password length (minimum 8 characters):\n\n"
-		s += m.passwordLength
+		if m.passwordLength > 0 {
+			s += fmt.Sprintf("%d", m.passwordLength)
+		}
 		if m.errorMsg != "" {
 			s += "\n\n❌ " + m.errorMsg
 		}
