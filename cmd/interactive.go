@@ -4,13 +4,15 @@ import (
 	"fmt"
 	"os"
 
+	utils "pw/utils"
+
 	tea "github.com/charmbracelet/bubbletea"
 )
 
 type model struct {
 	passwordOptions []string
 	cursor          int
-	selected        int
+	selected        []bool
 	inputMode       bool
 	passwordLength  string
 	completed       bool
@@ -19,8 +21,8 @@ type model struct {
 
 func initialModel() model {
 	return model{
-		passwordOptions: []string{"Easy to say", "Easy to read", "All characters"},
-		selected:        -1,
+		passwordOptions: []string{"Include Digits?", "Include Symbols?"},
+		selected:        make([]bool, 2),
 		inputMode:       false,
 		passwordLength:  "",
 		errorMsg:        "",
@@ -70,9 +72,10 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				if m.cursor < len(m.passwordOptions)-1 {
 					m.cursor++
 				}
-			case "enter", " ":
-				m.selected = m.cursor
+			case "n":
 				m.inputMode = true
+			case "enter", " ":
+				m.selected[m.cursor] = !m.selected[m.cursor]
 			}
 		}
 	}
@@ -81,8 +84,15 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 func (m model) View() string {
 	if m.completed {
-		option := m.passwordOptions[m.selected]
-		return fmt.Sprintf("\nSelected option: %s\nPassword length: %s\n\n", option, m.passwordLength)
+		includeDigits := m.selected[0]
+		includeSymbols := m.selected[1]
+
+		length := 0
+		fmt.Sscanf(m.passwordLength, "%d", &length)
+		password := utils.GeneratePassword(length, includeDigits, includeSymbols)
+
+		fmt.Println("📋 Your password has been copied to your clipboard!")
+		utils.WriteToClipboard(password)
 	}
 
 	if m.inputMode {
@@ -102,13 +112,14 @@ func (m model) View() string {
 			cursor = ">"
 		}
 		checked := " "
-		if m.selected == i {
+		if m.selected[i] {
 			checked = "x"
 		}
 		s += fmt.Sprintf("%s [%s] %s\n", cursor, checked, choice)
 	}
 	s += "\nPress space or enter to select an option.\n"
-	s += "\nPress ctrl+c to quit.\n"
+	s += "Press n to select the password length.\n"
+	s += "\n\nPress ctrl+c to quit.\n"
 	return s
 }
 
