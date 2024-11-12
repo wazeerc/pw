@@ -9,12 +9,18 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// rootCmd represents the base command when called without any subcommands
+var isInteractive bool
+
 var rootCmd = &cobra.Command{
 	Use:   "pw",
 	Short: "🔐 Effortlessly Generate Robust Passwords!",
 	Long: `pw is a minimal CLI application designed to effortlessly generate robust and secure passwords.
 You can customize the length and character composition to suit your security needs.`,
+	Run: func(cmd *cobra.Command, args []string) {
+		if isInteractive {
+			runInteractiveMode()
+		}
+	},
 }
 
 // Execute adds all child commands to the root command and sets flags appropriately.
@@ -27,6 +33,5 @@ func Execute() {
 }
 
 func init() {
-	// TODO: Run in interactive mode
-	// rootCmd.Flags().BoolP("interactive", "i", false, "Run in interactive mode")
+	rootCmd.Flags().BoolVarP(&isInteractive, "interactive", "i", false, "Run in interactive mode")
 }

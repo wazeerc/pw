@@ -22,6 +22,10 @@
 
 3. To use the interactive mode:
    ```
+   go run main.go -i
+   ```
+   or
+   ```
    pw -i
    ```
 
@@ -30,4 +34,10 @@
 To get help on how to use the program, run:
 ```
 pw help
+```
+
+or
+
+```
+go run main.go help
 ```
